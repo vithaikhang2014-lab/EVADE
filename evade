@@ -1,0 +1,322 @@
+-- ========== UNIVERSAL AUTO SCRIPT ==========
+-- Made by Deepseek
+-- Tính năng: Auto Jump (bấm Space liên tục), Auto Ctrl (giữ Ctrl)
+
+local player = game:GetService("Players").LocalPlayer
+local userInput = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService")
+
+-- Tạo GUI chính
+local gui = Instance.new("ScreenGui")
+gui.Name = "UniversalAutoGUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- ========== KHUNG CHÍNH ==========
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 200, 0, 45)
+mainFrame.Position = UDim2.new(0.5, -100, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 100, 150) -- Xanh nước biển
+mainFrame.BackgroundTransparency = 0.15
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = gui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = mainFrame
+
+-- Viền đậm
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(0, 60, 100) -- Xanh nước biển đậm
+mainStroke.Thickness = 2
+mainStroke.Parent = mainFrame
+
+-- Tiêu đề
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 35)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+titleBar.BackgroundTransparency = 0.2
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.Parent = titleBar
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -35, 1, 0)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "⚡ UNIVERSAL AUTO ⚡"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 12
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = titleBar
+
+-- Nút thu gọn
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 24, 0, 24)
+toggleBtn.Position = UDim2.new(1, -30, 0, 5.5)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
+toggleBtn.Text = "▼"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.TextSize = 12
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Parent = titleBar
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleBtn
+
+-- Nội dung chính (container)
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -10, 0, 0)
+contentFrame.Position = UDim2.new(0, 5, 0, 40)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+local contentLayout = Instance.new("UIListLayout")
+contentLayout.Padding = UDim.new(0, 8)
+contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+contentLayout.Parent = contentFrame
+
+-- ========== HÀM TẠO UI CON ==========
+local function createSubGUI(titleText, icon)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 45)
+    container.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+    container.BackgroundTransparency = 0.3
+    container.BorderSizePixel = 0
+    container.Parent = contentFrame
+    
+    local containerCorner = Instance.new("UICorner")
+    containerCorner.CornerRadius = UDim.new(0, 8)
+    containerCorner.Parent = container
+    
+    -- Tiêu đề con
+    local subTitle = Instance.new("TextLabel")
+    subTitle.Size = UDim2.new(1, -50, 0, 25)
+    subTitle.Position = UDim2.new(0, 8, 0, 0)
+    subTitle.BackgroundTransparency = 1
+    subTitle.Text = icon .. " " .. titleText
+    subTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    subTitle.Font = Enum.Font.GothamSemibold
+    subTitle.TextSize = 11
+    subTitle.TextXAlignment = Enum.TextXAlignment.Left
+    subTitle.Parent = container
+    
+    -- Nút bật/tắt
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 60, 0, 24)
+    btn.Position = UDim2.new(1, -68, 0.5, -12)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 60, 90)
+    btn.Text = "OFF"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 11
+    btn.BorderSizePixel = 0
+    btn.Parent = container
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
+    
+    -- Hover effect
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(0, 80, 110)
+    end)
+    btn.MouseLeave:Connect(function()
+        if btn.Text == "ON" then
+            btn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(0, 60, 90)
+        end
+    end)
+    
+    return container, btn
+end
+
+-- ========== AUTO JUMP (Bấm Space liên tục) ==========
+local jumpContainer, jumpBtn = createSubGUI("AUTO JUMP", "🦘")
+local jumpActive = false
+local jumpConnection = nil
+local jumpDelay = 0.15 -- delay giữa các lần nhảy (giây)
+
+local function startAutoJump()
+    if jumpActive then return end
+    jumpActive = true
+    
+    jumpConnection = runService.Heartbeat:Connect(function()
+        if jumpActive and player.Character and player.Character:FindFirstChild("Humanoid") then
+            -- Mô phỏng bấm phím Space
+            local jumpEvent = {
+                KeyCode = Enum.KeyCode.Space,
+                UserInputType = Enum.UserInputType.Keyboard
+            }
+            userInput:SetKeyDown(Enum.KeyCode.Space)
+            task.wait(0.05)
+            userInput:SetKeyUp(Enum.KeyCode.Space)
+            task.wait(jumpDelay)
+        end
+    end)
+    
+    jumpBtn.Text = "ON"
+    jumpBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+    print("✅ AUTO JUMP ĐÃ BẬT")
+end
+
+local function stopAutoJump()
+    if not jumpActive then return end
+    jumpActive = false
+    
+    if jumpConnection then
+        jumpConnection:Disconnect()
+        jumpConnection = nil
+    end
+    
+    -- Đảm bảo thả phím Space
+    userInput:SetKeyUp(Enum.KeyCode.Space)
+    
+    jumpBtn.Text = "OFF"
+    jumpBtn.BackgroundColor3 = Color3.fromRGB(0, 60, 90)
+    print("❌ AUTO JUMP ĐÃ TẮT")
+end
+
+jumpBtn.MouseButton1Click:Connect(function()
+    if jumpActive then
+        stopAutoJump()
+    else
+        startAutoJump()
+    end
+end)
+
+-- ========== AUTO CTRL (Giữ Ctrl liên tục) ==========
+local ctrlContainer, ctrlBtn = createSubGUI("AUTO CTRL", "🎮")
+local ctrlActive = false
+local ctrlConnection = nil
+
+local function startAutoCtrl()
+    if ctrlActive then return end
+    ctrlActive = true
+    
+    -- Giữ phím LeftControl
+    userInput:SetKeyDown(Enum.KeyCode.LeftControl)
+    
+    -- Kiểm tra liên tục để đảm bảo vẫn giữ
+    ctrlConnection = runService.Heartbeat:Connect(function()
+        if ctrlActive then
+            if not userInput:IsKeyDown(Enum.KeyCode.LeftControl) then
+                userInput:SetKeyDown(Enum.KeyCode.LeftControl)
+            end
+        end
+    end)
+    
+    ctrlBtn.Text = "ON"
+    ctrlBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+    print("✅ AUTO CTRL ĐÃ BẬT (Đang giữ Ctrl)")
+end
+
+local function stopAutoCtrl()
+    if not ctrlActive then return end
+    ctrlActive = false
+    
+    if ctrlConnection then
+        ctrlConnection:Disconnect()
+        ctrlConnection = nil
+    end
+    
+    -- Thả phím LeftControl
+    userInput:SetKeyUp(Enum.KeyCode.LeftControl)
+    
+    ctrlBtn.Text = "OFF"
+    ctrlBtn.BackgroundColor3 = Color3.fromRGB(0, 60, 90)
+    print("❌ AUTO CTRL ĐÃ TẮT")
+end
+
+ctrlBtn.MouseButton1Click:Connect(function()
+    if ctrlActive then
+        stopAutoCtrl()
+    else
+        startAutoCtrl()
+    end
+end)
+
+-- ========== CẬP NHẬT CHIỀU CAO ==========
+local function updateHeight()
+    task.wait(0.05)
+    local totalHeight = contentLayout.AbsoluteContentSize.Y
+    contentFrame.Size = UDim2.new(1, -10, 0, totalHeight + 10)
+end
+
+contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateHeight)
+task.wait(0.1)
+updateHeight()
+
+-- ========== THU GỌN/MỞ RỘNG ==========
+local expanded = true
+
+local function setExpanded(exp)
+    expanded = exp
+    if exp then
+        -- Mở rộng
+        local frameTween = tweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 200, 0, 140)
+        })
+        frameTween:Play()
+        
+        local contentTween = tweenService:Create(contentFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(1, -10, 0, 90)
+        })
+        contentTween:Play()
+        
+        toggleBtn.Text = "▼"
+    else
+        -- Thu gọn
+        local frameTween = tweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 200, 0, 45)
+        })
+        frameTween:Play()
+        
+        local contentTween = tweenService:Create(contentFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(1, -10, 0, 0)
+        })
+        contentTween:Play()
+        
+        toggleBtn.Text = "▲"
+    end
+end
+
+toggleBtn.MouseButton1Click:Connect(function()
+    setExpanded(not expanded)
+end)
+
+-- ========== XỬ LÝ KHI THOÁT GAME ==========
+-- Tự động tắt tất cả khi người chơi rời khỏi game (không cần, nhưng để an toàn)
+player:GetPropertyChangedSignal("Character"):Connect(function()
+    if not player.Character then
+        -- Người chơi đã chết hoặc rời game, tắt tất cả
+        if jumpActive then stopAutoJump() end
+        if ctrlActive then stopAutoCtrl() end
+    end
+end)
+
+-- ========== XỬ LÝ KHI RESPAWN ==========
+player.CharacterAdded:Connect(function()
+    -- Khi respawn, nếu auto jump đang bật thì vẫn giữ (không cần reset)
+    -- Nhưng auto ctrl thì cần bật lại
+    if ctrlActive then
+        task.wait(0.5)
+        userInput:SetKeyDown(Enum.KeyCode.LeftControl)
+    end
+end)
+
+-- ========== KHỞI TẠO ==========
+setExpanded(true)
+print("⚡ UNIVERSAL AUTO SCRIPT - Made by Deepseek")
+print("✅ Auto Jump: Bấm Space liên tục | Auto Ctrl: Giữ Ctrl")
+print("✅ Chỉ có tác dụng trong game, ra ngoài không ảnh hưởng")
