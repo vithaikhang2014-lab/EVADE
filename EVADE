@@ -1,0 +1,536 @@
+-- ========== UNIVERSAL SCRIPT - AUTO JUMP & AUTO CTRL ==========
+-- Made by Deepseek
+-- Màu xanh nước biển, bo góc, nhỏ gọn, có thể thu gọn
+
+local player = game:GetService("Players").LocalPlayer
+local userInput = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService")
+
+-- Tạo GUI chính
+local gui = Instance.new("ScreenGui")
+gui.Name = "UniversalGUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- ========== KHUNG CHÍNH ==========
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 45)
+frame.Position = UDim2.new(0.5, -100, 0.5, -150)
+frame.BackgroundColor3 = Color3.fromRGB(0, 100, 150) -- Xanh nước biển
+frame.BackgroundTransparency = 0.15
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+-- Viền xanh đậm
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 60, 100)
+stroke.Thickness = 2
+stroke.Parent = frame
+
+-- ========== TIÊU ĐỀ ==========
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 35)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+titleBar.BackgroundTransparency = 0.2
+titleBar.BorderSizePixel = 0
+titleBar.Parent = frame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.Parent = titleBar
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -35, 1, 0)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "🌊 UNIVERSAL HUB"
+title.TextColor3 = Color3.fromRGB(200, 230, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 13
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = titleBar
+
+-- Nút thu gọn
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 24, 0, 24)
+toggleBtn.Position = UDim2.new(1, -30, 0, 5.5)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 70, 110)
+toggleBtn.Text = "▼"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.TextSize = 12
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Parent = titleBar
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleBtn
+
+-- ========== CONTAINER CHO CÁC NÚT ==========
+local container = Instance.new("Frame")
+container.Size = UDim2.new(1, -10, 0, 0)
+container.Position = UDim2.new(0, 5, 0, 40)
+container.BackgroundTransparency = 1
+container.Parent = frame
+
+local containerLayout = Instance.new("UIListLayout")
+containerLayout.Padding = UDim.new(0, 6)
+containerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+containerLayout.Parent = container
+
+-- ========== HÀM TẠO UI ==========
+local function createButton(name, text, icon, color)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(1, 0, 0, 34)
+    btn.BackgroundColor3 = color
+    btn.BackgroundTransparency = 0.2
+    btn.Text = icon .. " " .. text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 12
+    btn.BorderSizePixel = 0
+    btn.Parent = container
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 7)
+    btnCorner.Parent = btn
+    
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundTransparency = 0
+    end)
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundTransparency = 0.2
+    end)
+    
+    return btn
+end
+
+-- ========== TẠO UI RIÊNG CHO AUTO JUMP ==========
+local autoJumpGui = Instance.new("ScreenGui")
+autoJumpGui.Name = "AutoJumpGUI"
+autoJumpGui.ResetOnSpawn = false
+autoJumpGui.Parent = player:WaitForChild("PlayerGui")
+
+local jumpFrame = Instance.new("Frame")
+jumpFrame.Size = UDim2.new(0, 180, 0, 45)
+jumpFrame.Position = UDim2.new(1, -190, 0.5, -70)
+jumpFrame.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
+jumpFrame.BackgroundTransparency = 0.15
+jumpFrame.BorderSizePixel = 0
+jumpFrame.Active = true
+jumpFrame.Draggable = true
+jumpFrame.Parent = autoJumpGui
+
+local jumpCorner = Instance.new("UICorner")
+jumpCorner.CornerRadius = UDim.new(0, 10)
+jumpCorner.Parent = jumpFrame
+
+local jumpStroke = Instance.new("UIStroke")
+jumpStroke.Color = Color3.fromRGB(0, 60, 100)
+jumpStroke.Thickness = 2
+jumpStroke.Parent = jumpFrame
+
+local jumpTitleBar = Instance.new("Frame")
+jumpTitleBar.Size = UDim2.new(1, 0, 0, 35)
+jumpTitleBar.Position = UDim2.new(0, 0, 0, 0)
+jumpTitleBar.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+jumpTitleBar.BackgroundTransparency = 0.2
+jumpTitleBar.BorderSizePixel = 0
+jumpTitleBar.Parent = jumpFrame
+
+local jumpTitleCorner = Instance.new("UICorner")
+jumpTitleCorner.CornerRadius = UDim.new(0, 10)
+jumpTitleCorner.Parent = jumpTitleBar
+
+local jumpTitle = Instance.new("TextLabel")
+jumpTitle.Size = UDim2.new(1, -35, 1, 0)
+jumpTitle.Position = UDim2.new(0, 10, 0, 0)
+jumpTitle.BackgroundTransparency = 1
+jumpTitle.Text = "🦘 AUTO JUMP"
+jumpTitle.TextColor3 = Color3.fromRGB(200, 230, 255)
+jumpTitle.Font = Enum.Font.GothamBold
+jumpTitle.TextSize = 12
+jumpTitle.TextXAlignment = Enum.TextXAlignment.Left
+jumpTitle.Parent = jumpTitleBar
+
+local jumpToggleBtn = Instance.new("TextButton")
+jumpToggleBtn.Size = UDim2.new(0, 24, 0, 24)
+jumpToggleBtn.Position = UDim2.new(1, -30, 0, 5.5)
+jumpToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 70, 110)
+jumpToggleBtn.Text = "▼"
+jumpToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpToggleBtn.TextSize = 12
+jumpToggleBtn.BorderSizePixel = 0
+jumpToggleBtn.Parent = jumpTitleBar
+
+local jumpToggleCorner = Instance.new("UICorner")
+jumpToggleCorner.CornerRadius = UDim.new(1, 0)
+jumpToggleCorner.Parent = jumpToggleBtn
+
+-- Nút bật/tắt Auto Jump
+local jumpButton = Instance.new("TextButton")
+jumpButton.Size = UDim2.new(1, -10, 0, 34)
+jumpButton.Position = UDim2.new(0, 5, 0, 40)
+jumpButton.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+jumpButton.BackgroundTransparency = 0.2
+jumpButton.Text = "🔴 AUTO JUMP OFF"
+jumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpButton.Font = Enum.Font.GothamSemibold
+jumpButton.TextSize = 11
+jumpButton.BorderSizePixel = 0
+jumpButton.Parent = jumpFrame
+
+local jumpButtonCorner = Instance.new("UICorner")
+jumpButtonCorner.CornerRadius = UDim.new(0, 7)
+jumpButtonCorner.Parent = jumpButton
+
+-- ========== TẠO UI RIÊNG CHO AUTO CTRL ==========
+local autoCtrlGui = Instance.new("ScreenGui")
+autoCtrlGui.Name = "AutoCtrlGUI"
+autoCtrlGui.ResetOnSpawn = false
+autoCtrlGui.Parent = player:WaitForChild("PlayerGui")
+
+local ctrlFrame = Instance.new("Frame")
+ctrlFrame.Size = UDim2.new(0, 180, 0, 45)
+ctrlFrame.Position = UDim2.new(1, -190, 0.5, -10)
+ctrlFrame.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
+ctrlFrame.BackgroundTransparency = 0.15
+ctrlFrame.BorderSizePixel = 0
+ctrlFrame.Active = true
+ctrlFrame.Draggable = true
+ctrlFrame.Parent = autoCtrlGui
+
+local ctrlCorner = Instance.new("UICorner")
+ctrlCorner.CornerRadius = UDim.new(0, 10)
+ctrlCorner.Parent = ctrlFrame
+
+local ctrlStroke = Instance.new("UIStroke")
+ctrlStroke.Color = Color3.fromRGB(0, 60, 100)
+ctrlStroke.Thickness = 2
+ctrlStroke.Parent = ctrlFrame
+
+local ctrlTitleBar = Instance.new("Frame")
+ctrlTitleBar.Size = UDim2.new(1, 0, 0, 35)
+ctrlTitleBar.Position = UDim2.new(0, 0, 0, 0)
+ctrlTitleBar.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+ctrlTitleBar.BackgroundTransparency = 0.2
+ctrlTitleBar.BorderSizePixel = 0
+ctrlTitleBar.Parent = ctrlFrame
+
+local ctrlTitleCorner = Instance.new("UICorner")
+ctrlTitleCorner.CornerRadius = UDim.new(0, 10)
+ctrlTitleCorner.Parent = ctrlTitleBar
+
+local ctrlTitle = Instance.new("TextLabel")
+ctrlTitle.Size = UDim2.new(1, -35, 1, 0)
+ctrlTitle.Position = UDim2.new(0, 10, 0, 0)
+ctrlTitle.BackgroundTransparency = 1
+ctrlTitle.Text = "⌨️ AUTO CTRL"
+ctrlTitle.TextColor3 = Color3.fromRGB(200, 230, 255)
+ctrlTitle.Font = Enum.Font.GothamBold
+ctrlTitle.TextSize = 12
+ctrlTitle.TextXAlignment = Enum.TextXAlignment.Left
+ctrlTitle.Parent = ctrlTitleBar
+
+local ctrlToggleBtn = Instance.new("TextButton")
+ctrlToggleBtn.Size = UDim2.new(0, 24, 0, 24)
+ctrlToggleBtn.Position = UDim2.new(1, -30, 0, 5.5)
+ctrlToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 70, 110)
+ctrlToggleBtn.Text = "▼"
+ctrlToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ctrlToggleBtn.TextSize = 12
+ctrlToggleBtn.BorderSizePixel = 0
+ctrlToggleBtn.Parent = ctrlTitleBar
+
+local ctrlToggleCorner = Instance.new("UICorner")
+ctrlToggleCorner.CornerRadius = UDim.new(1, 0)
+ctrlToggleCorner.Parent = ctrlToggleBtn
+
+-- Nút bật/tắt Auto Ctrl
+local ctrlButton = Instance.new("TextButton")
+ctrlButton.Size = UDim2.new(1, -10, 0, 34)
+ctrlButton.Position = UDim2.new(0, 5, 0, 40)
+ctrlButton.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+ctrlButton.BackgroundTransparency = 0.2
+ctrlButton.Text = "🔴 AUTO CTRL OFF"
+ctrlButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ctrlButton.Font = Enum.Font.GothamSemibold
+ctrlButton.TextSize = 11
+ctrlButton.BorderSizePixel = 0
+ctrlButton.Parent = ctrlFrame
+
+local ctrlButtonCorner = Instance.new("UICorner")
+ctrlButtonCorner.CornerRadius = UDim.new(0, 7)
+ctrlButtonCorner.Parent = ctrlButton
+
+-- ========== BIẾN TRẠNG THÁI ==========
+local autoJumpActive = false
+local autoCtrlActive = false
+local jumpConnection = nil
+local ctrlConnection = nil
+
+-- ========== AUTO JUMP FUNCTION ==========
+local function enableAutoJump()
+    if autoJumpActive then return end
+    autoJumpActive = true
+    
+    -- Mỗi frame sẽ nhảy (không cần giữ)
+    jumpConnection = runService.Heartbeat:Connect(function()
+        if autoJumpActive and player.Character then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end)
+    
+    jumpButton.Text = "🟢 AUTO JUMP ON"
+    jumpButton.BackgroundColor3 = Color3.fromRGB(0, 120, 80)
+    print("✅ AUTO JUMP ĐÃ BẬT")
+end
+
+local function disableAutoJump()
+    if not autoJumpActive then return end
+    autoJumpActive = false
+    
+    if jumpConnection then
+        jumpConnection:Disconnect()
+        jumpConnection = nil
+    end
+    
+    jumpButton.Text = "🔴 AUTO JUMP OFF"
+    jumpButton.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+    print("❌ AUTO JUMP ĐÃ TẮT")
+end
+
+jumpButton.MouseButton1Click:Connect(function()
+    if autoJumpActive then
+        disableAutoJump()
+    else
+        enableAutoJump()
+    end
+end)
+
+jumpButton.MouseEnter:Connect(function()
+    if autoJumpActive then
+        jumpButton.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+    else
+        jumpButton.BackgroundColor3 = Color3.fromRGB(0, 110, 150)
+    end
+end)
+
+jumpButton.MouseLeave:Connect(function()
+    if autoJumpActive then
+        jumpButton.BackgroundColor3 = Color3.fromRGB(0, 120, 80)
+    else
+        jumpButton.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+    end
+end)
+
+-- ========== AUTO CTRL FUNCTION (GIỮ PHÍM) ==========
+local function enableAutoCtrl()
+    if autoCtrlActive then return end
+    autoCtrlActive = true
+    
+    -- Giả lập giữ phím Ctrl liên tục
+    local ctrlKey = Enum.KeyCode.LeftControl
+    
+    -- Gửi sự kiện phím xuống
+    local function sendCtrlDown()
+        local keyDownEvent = {
+            KeyCode = ctrlKey,
+            UserInputType = Enum.UserInputType.Keyboard
+        }
+        -- Mô phỏng nhấn giữ Ctrl
+        userInput.InputBegan:Fire(keyDownEvent)
+    end
+    
+    -- Gửi mỗi frame để đảm bảo giữ liên tục
+    ctrlConnection = runService.Heartbeat:Connect(function()
+        if autoCtrlActive then
+            sendCtrlDown()
+        end
+    end)
+    
+    -- Gửi ngay lập tức
+    sendCtrlDown()
+    
+    ctrlButton.Text = "🟢 AUTO CTRL ON"
+    ctrlButton.BackgroundColor3 = Color3.fromRGB(0, 120, 80)
+    print("✅ AUTO CTRL ĐÃ BẬT - Đang giữ phím Ctrl")
+end
+
+local function disableAutoCtrl()
+    if not autoCtrlActive then return end
+    autoCtrlActive = false
+    
+    if ctrlConnection then
+        ctrlConnection:Disconnect()
+        ctrlConnection = nil
+    end
+    
+    -- Thả phím Ctrl
+    local ctrlKey = Enum.KeyCode.LeftControl
+    local keyUpEvent = {
+        KeyCode = ctrlKey,
+        UserInputType = Enum.UserInputType.Keyboard
+    }
+    userInput.InputEnded:Fire(keyUpEvent)
+    
+    ctrlButton.Text = "🔴 AUTO CTRL OFF"
+    ctrlButton.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+    print("❌ AUTO CTRL ĐÃ TẮT - Đã thả phím Ctrl")
+end
+
+ctrlButton.MouseButton1Click:Connect(function()
+    if autoCtrlActive then
+        disableAutoCtrl()
+    else
+        enableAutoCtrl()
+    end
+end)
+
+ctrlButton.MouseEnter:Connect(function()
+    if autoCtrlActive then
+        ctrlButton.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+    else
+        ctrlButton.BackgroundColor3 = Color3.fromRGB(0, 110, 150)
+    end
+end)
+
+ctrlButton.MouseLeave:Connect(function()
+    if autoCtrlActive then
+        ctrlButton.BackgroundColor3 = Color3.fromRGB(0, 120, 80)
+    else
+        ctrlButton.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
+    end
+end)
+
+-- ========== XỬ LÝ KHI NHÂN VẬT RESPAWN ==========
+player.CharacterAdded:Connect(function(character)
+    repeat task.wait() until character:FindFirstChild("Humanoid")
+    
+    -- Nếu Auto Jump đang bật, vẫn tiếp tục (tự động bật lại)
+    if autoJumpActive then
+        -- Tạm tắt rồi bật lại để refresh
+        disableAutoJump()
+        task.wait(0.1)
+        enableAutoJump()
+    end
+    
+    -- Auto Ctrl vẫn giữ nguyên trạng thái
+    if autoCtrlActive then
+        -- Refresh auto ctrl
+        disableAutoCtrl()
+        task.wait(0.1)
+        enableAutoCtrl()
+    end
+end)
+
+-- ========== THU GỌN/MỞ RỘNG CHO GUI CHÍNH ==========
+local expanded = true
+
+local function setExpanded(exp)
+    expanded = exp
+    local targetHeight = exp and 130 or 45
+    local targetContainerSize = exp and 85 or 0
+    
+    local frameTween = tweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 200, 0, targetHeight)
+    })
+    frameTween:Play()
+    
+    local containerTween = tweenService:Create(container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(1, -10, 0, targetContainerSize)
+    })
+    containerTween:Play()
+    
+    toggleBtn.Text = exp and "▲" or "▼"
+end
+
+-- ========== THU GỌN/MỞ RỘNG CHO AUTO JUMP GUI ==========
+local jumpExpanded = true
+
+local function setJumpExpanded(exp)
+    jumpExpanded = exp
+    local targetHeight = exp and 85 or 45
+    local targetBtnSize = exp and 34 or 0
+    
+    local frameTween = tweenService:Create(jumpFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 180, 0, targetHeight)
+    })
+    frameTween:Play()
+    
+    local btnTween = tweenService:Create(jumpButton, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(1, -10, 0, targetBtnSize)
+    })
+    btnTween:Play()
+    
+    jumpToggleBtn.Text = exp and "▲" or "▼"
+end
+
+-- ========== THU GỌN/MỞ RỘNG CHO AUTO CTRL GUI ==========
+local ctrlExpanded = true
+
+local function setCtrlExpanded(exp)
+    ctrlExpanded = exp
+    local targetHeight = exp and 85 or 45
+    local targetBtnSize = exp and 34 or 0
+    
+    local frameTween = tweenService:Create(ctrlFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 180, 0, targetHeight)
+    })
+    frameTween:Play()
+    
+    local btnTween = tweenService:Create(ctrlButton, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(1, -10, 0, targetBtnSize)
+    })
+    btnTween:Play()
+    
+    ctrlToggleBtn.Text = exp and "▲" or "▼"
+end
+
+-- Xử lý nút thu gọn
+toggleBtn.MouseButton1Click:Connect(function()
+    setExpanded(not expanded)
+end)
+
+jumpToggleBtn.MouseButton1Click:Connect(function()
+    setJumpExpanded(not jumpExpanded)
+end)
+
+ctrlToggleBtn.MouseButton1Click:Connect(function()
+    setCtrlExpanded(not ctrlExpanded)
+end)
+
+-- Khởi tạo trạng thái
+setExpanded(true)
+setJumpExpanded(true)
+setCtrlExpanded(true)
+
+-- Tạo nút trong container chính (chỉ để trang trí)
+local mainBtn1 = createButton("Info1", "UNIVERSAL TOOLS", "🌊", Color3.fromRGB(0, 90, 130))
+mainBtn1.MouseButton1Click:Connect(function()
+    -- Chỉ là thông tin
+    print("🌊 UNIVERSAL HUB - Made by Deepseek")
+    print("🦘 Auto Jump: Bật lên sẽ tự động nhảy liên tục")
+    print("⌨️ Auto Ctrl: Bật lên sẽ giữ phím Ctrl liên tục")
+end)
+
+local mainBtn2 = createButton("Info2", "DRAG TO MOVE", "📌", Color3.fromRGB(0, 90, 130))
+mainBtn2.MouseButton1Click:Connect(function()
+    print("💡 Bạn có thể kéo các cửa sổ đến vị trí mong muốn!")
+end)
+
+print("🌊 UNIVERSAL SCRIPT - Made by Deepseek")
+print("✅ Đã tải thành công! Cửa sổ màu xanh nước biển, có thể kéo và thu gọn.")
+print("🦘 Auto Jump: Tự động nhảy liên tục (không cần giữ phím)")
+print("⌨️ Auto Ctrl: Tự động giữ phím Ctrl liên tục")
